@@ -17,12 +17,16 @@ await conn.Connect();
 Kaenx.Konnect.Classes.BusDevice device = new Kaenx.Konnect.Classes.BusDevice(args[2], conn);
 await device.Connect();
 
-byte[] data = System.IO.File.ReadAllBytes(System.IO.Path.Combine(AppContext.BaseDirectory, args[3]));
-Console.WriteLine($"Size:       {data} Bytes ({data.Length/1024} kB)");
+byte[] data = System.IO.File.ReadAllBytes(args[3]);
+Console.WriteLine($"Size:       {data.Length} Bytes ({data.Length/1024} kB)");
 
-Kaenx.Konnect.Messages.Response.MsgFunctionPropertyStateRes response = await device.InvokeFunctionProperty(0, 243, null, true);
+uint fileSize = (uint)data.Length;
+byte[] initdata = BitConverter.GetBytes(fileSize);
+string xy = BitConverter.ToString(initdata);
 
-int interval = 15;
+Kaenx.Konnect.Messages.Response.MsgFunctionPropertyStateRes response = await device.InvokeFunctionProperty(0, 243, initdata, true);
+
+int interval = 228;
 int pause = args.Length < 5 ? 0 : int.Parse(args[4]);
 int position = 0;
 while(true)

@@ -1,0 +1,139 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\u6\\Documents\\repos\\KnxUpdater\\KnxUpdater.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\u6\\Documents\\repos\\Kaenx-Konnect\\Kaenx.Konnect\\Kaenx.Konnect.csproj": {
+      "version": "0.1.4",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\u6\\Documents\\repos\\Kaenx-Konnect\\Kaenx.Konnect\\Kaenx.Konnect.csproj",
+        "projectName": "Kaenx.Konnect",
+        "projectPath": "C:\\Users\\u6\\Documents\\repos\\Kaenx-Konnect\\Kaenx.Konnect\\Kaenx.Konnect.csproj",
+        "packagesPath": "C:\\Users\\u6\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\u6\\Documents\\repos\\Kaenx-Konnect\\Kaenx.Konnect\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\u6\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "targetAlias": "netstandard2.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "targetAlias": "netstandard2.0",
+          "dependencies": {
+            "Device.Net": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "Hid.Net": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "Microsoft.Extensions.Logging": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.1, )"
+            },
+            "Usb.Net": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "K:\\Mike\\dotnet\\sdk\\6.0.201\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\u6\\Documents\\repos\\KnxUpdater\\KnxUpdater.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\u6\\Documents\\repos\\KnxUpdater\\KnxUpdater.csproj",
+        "projectName": "KnxUpdater",
+        "projectPath": "C:\\Users\\u6\\Documents\\repos\\KnxUpdater\\KnxUpdater.csproj",
+        "packagesPath": "C:\\Users\\u6\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\u6\\Documents\\repos\\KnxUpdater\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\u6\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {
+              "C:\\Users\\u6\\Documents\\repos\\Kaenx-Konnect\\Kaenx.Konnect\\Kaenx.Konnect.csproj": {
+                "projectPath": "C:\\Users\\u6\\Documents\\repos\\Kaenx-Konnect\\Kaenx.Konnect\\Kaenx.Konnect.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "K:\\Mike\\dotnet\\sdk\\6.0.201\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

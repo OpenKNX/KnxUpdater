@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "dgSpecHash": "AWVeUx25D/j5wqq3Q/14SIoVDLqE3FO2SLkfEdgOIdodTut6rWQfoUL2J6GrNKyLj6u2gmTWo6KybObLlx8pIQ==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\u6\\Documents\\repos\\KnxUpdater\\KnxUpdater.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\u6\\.nuget\\packages\\device.net\\4.0.0\\device.net.4.0.0.nupkg.sha512",
+    "C:\\Users\\u6\\.nuget\\packages\\hid.net\\4.0.0\\hid.net.4.0.0.nupkg.sha512",
+    "C:\\Users\\u6\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\5.0.0\\microsoft.extensions.dependencyinjection.5.0.0.nupkg.sha512",
+    "C:\\Users\\u6\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\5.0.0\\microsoft.extensions.dependencyinjection.abstractions.5.0.0.nupkg.sha512",
+    "C:\\Users\\u6\\.nuget\\packages\\microsoft.extensions.logging\\5.0.0\\microsoft.extensions.logging.5.0.0.nupkg.sha512",
+    "C:\\Users\\u6\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\5.0.0\\microsoft.extensions.logging.abstractions.5.0.0.nupkg.sha512",
+    "C:\\Users\\u6\\.nuget\\packages\\microsoft.extensions.options\\5.0.0\\microsoft.extensions.options.5.0.0.nupkg.sha512",
+    "C:\\Users\\u6\\.nuget\\packages\\microsoft.extensions.primitives\\5.0.0\\microsoft.extensions.primitives.5.0.0.nupkg.sha512",
+    "C:\\Users\\u6\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512",
+    "C:\\Users\\u6\\.nuget\\packages\\usb.net\\4.0.0\\usb.net.4.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

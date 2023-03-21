@@ -1,66 +1,167 @@
 ﻿// See https://aka.ms/new-console-template for more information
 Console.WriteLine("Willkommen zum KnxUpdater!!");
 Console.WriteLine();
+
+if(args.Length == 0 || args[0] == "help" || args[0] == "--help")
+{
+    Console.WriteLine();
+    Console.WriteLine("knxupdater <IP-Address> <PhysicalAddress> <PathToFirmware> (<Port> <Delay>)");
+    Console.WriteLine();
+    Console.WriteLine("IP-Address:      IP of the KNX-IP-interface");
+    Console.WriteLine("PhysicalAddress: Address of the KNX-Device (ex. 1.2.120)");
+    Console.WriteLine("PathToFirmware:  Path to the firmware.bin or firmware.bin.gz");
+    Console.WriteLine("Port:            Optional - Port of the KNX-IP-interface (3671)");
+    Console.WriteLine("Delay:           Optional - Delay after each telegram");
+    return;
+}
+
+int port = args.Length < 4 ? 3671 : int.Parse(args[3]);
+
 Console.WriteLine($"IP-Adresse: {args[0]}");
-Console.WriteLine($"IP-Port:    {args[1]}");
-Console.WriteLine($"PA:         {args[2]}");
-Console.WriteLine($"Firmware:   {args[3]}");
+Console.WriteLine($"IP-Port:    {port}");
+Console.WriteLine($"PA:         {args[1]}");
+Console.WriteLine($"Firmware:   {args[2]}");
 Console.WriteLine();
 
-if(!args[3].EndsWith(".gz"))
+
+if(!File.Exists(args[2]))
 {
-    Console.WriteLine("Info: Es wird empfohlen die Firmware mit gzip zu komprimieren");
+    Console.WriteLine("Error: Das Programm kann die angegebene Firmware nicht finden");
+    return;
 }
 
-Kaenx.Konnect.Connections.KnxIpTunneling conn = new Kaenx.Konnect.Connections.KnxIpTunneling(args[0], int.Parse(args[1]));
-await conn.Connect();
-Kaenx.Konnect.Classes.BusDevice device = new Kaenx.Konnect.Classes.BusDevice(args[2], conn);
-await device.Connect();
 
-byte[] data = System.IO.File.ReadAllBytes(args[3]);
-Console.WriteLine($"Size:       {data.Length} Bytes ({data.Length/1024} kB)");
-
-uint fileSize = (uint)data.Length;
-byte[] initdata = BitConverter.GetBytes(fileSize);
-string xy = BitConverter.ToString(initdata);
-
-Kaenx.Konnect.Messages.Response.MsgFunctionPropertyStateRes response = await device.InvokeFunctionProperty(0, 243, initdata, true);
-
-int interval = 228;
-int pause = args.Length < 5 ? 0 : int.Parse(args[4]);
-int position = 0;
-while(true)
+if(!args[2].EndsWith(".gz"))
 {
-    if(data.Length - position == 0) break;
-
-    if(data.Length - position < interval)
-        interval = data.Length - position;
-
-    byte[] tosend = data.Skip(position).Take(interval).ToArray();
-
-    int crcreq = KnxUpdater.CRC16.Get(tosend);
-    Console.WriteLine($"CRC Req:  0x{crcreq:X4}");
-
-    response = await device.InvokeFunctionProperty(0, 244, tosend, true);
-    if(response.Data[0] != 0x00)
-    {
-        throw new Exception($"Fehler beim Übertragen: 0x{response.Data[0]}");
-    }
-
-    int crcresp = (response.Data[1] << 8) | response.Data[2];
-    Console.WriteLine($"CRC Got:  0x{crcresp:X4}");
-
-    if(crcreq != crcresp)
-    {
-        throw new Exception("Fehler beim Übertragen: Falscher CRC");
-    }
-
-    if(pause != 0) await Task.Delay(pause);
-    position += interval;
+    Console.WriteLine("Info:  Es wird empfohlen die Firmware mit gzip zu komprimieren");
 }
 
-await device.InvokeFunctionProperty(0, 245, null);
+try
+{
+    Kaenx.Konnect.Connections.KnxIpTunneling conn = new Kaenx.Konnect.Connections.KnxIpTunneling(args[0], port);
+    await conn.Connect();
+    Console.WriteLine("Info:  Verbindung zum Bus hergestellt");
+    Kaenx.Konnect.Classes.BusDevice device = new Kaenx.Konnect.Classes.BusDevice(args[1], conn);
+    await device.Connect();
+    Console.WriteLine($"Info:  Verbindung zum KNX-Gerät {args[1]} hergestellt");
 
-await device.Disconnect();
-await conn.Disconnect();
-Console.WriteLine("Update erfolgreich durchgeführt");
+    byte[] data = System.IO.File.ReadAllBytes(args[2]);
+    Console.WriteLine($"Size:       {data.Length} Bytes ({data.Length/1024} kB)");
+
+    uint fileSize = (uint)data.Length;
+    byte[] initdata = BitConverter.GetBytes(fileSize);
+    string xy = BitConverter.ToString(initdata);
+
+    Kaenx.Konnect.Messages.Response.MsgFunctionPropertyStateRes response = await device.InvokeFunctionProperty(0, 243, initdata, true);
+
+    bool canFancy = true;
+    try{
+        int top = Console.CursorTop;
+        Console.Write("Progress: [                    ]    % -     B/s -      s left");
+    } catch {
+        canFancy = false;
+    }
+
+    int interval = 228; // Number of data-bytes per telegram
+    int pause = args.Length < 5 ? 0 : int.Parse(args[4]);
+    int position = 0;
+    int lastPosition = 0;
+    DateTime lastCheck = DateTime.Now;
+    bool firstSpeed = true;
+    while(true)
+    {
+        if(data.Length - position == 0) break;
+
+        if(data.Length - position < interval)
+            interval = data.Length - position;
+
+        byte[] tosend = data.Skip(position).Take(interval).ToArray();
+
+        int crcreq = KnxUpdater.CRC16.Get(tosend);
+
+        response = await device.InvokeFunctionProperty(0, 244, tosend, true);
+        if(response.Data[0] != 0x00)
+        {
+            throw new Exception($"Fehler beim Übertragen: 0x{response.Data[0]}");
+        }
+
+        int crcresp = (response.Data[1] << 8) | response.Data[2];
+
+        if(crcreq != crcresp)
+        {
+            throw new Exception($"Error: Fehler beim Übertragen -> Falscher CRC (Req: {crcreq:X4} / Res: {crcresp:X4})");
+        }
+
+        int progress = (int)Math.Floor(position * 100.0 / fileSize);
+        if(progress > 100) progress = 100;
+
+        TimeSpan time = DateTime.Now - lastCheck;
+        int speed = (int)Math.Floor((position - lastPosition) / (double)time.TotalSeconds);
+        int timeLeft = (int)Math.Ceiling((fileSize - position) / (double)speed);
+
+        if(firstSpeed)
+        {
+            speed = 0;
+            firstSpeed = false;
+            timeLeft = 0;
+        }
+
+        if(canFancy)
+        {
+            Console.SetCursorPosition(36 - progress.ToString().Length, Console.CursorTop);
+            Console.Write(progress);
+
+            Console.SetCursorPosition(11, Console.CursorTop);
+            for(int i = 0; i < ((int)Math.Floor(progress / 5.0)); i++)
+                Console.Write("=");
+
+            Console.SetCursorPosition(40, Console.CursorTop);
+            for(int i = 0; i < 3 - speed.ToString().Length; i++)
+                Console.Write(" ");
+            Console.Write(speed);
+                
+            Console.SetCursorPosition(50, Console.CursorTop);
+            for(int i = 0; i < 4 - timeLeft.ToString().Length; i++)
+                Console.Write(" ");
+            Console.Write(timeLeft);
+                
+            Console.SetCursorPosition(0, Console.CursorTop);
+        } else {
+            Console.Write("Progress: [");
+            for(int i = 0; i < ((int)Math.Floor(progress / 5.0)); i++)
+                Console.Write("=");
+            for(int i = 0; i < 20 - ((int)Math.Floor(progress / 5.0)); i++)
+                Console.Write(" ");
+            Console.Write("] ");
+
+            for(int i = 0; i < (3 - progress.ToString().Length); i++)
+                Console.Write(" ");
+            Console.Write(progress + "% - ");
+            
+            for(int i = 0; i < 3 - speed.ToString().Length; i++)
+                Console.Write(" ");
+            Console.Write(speed + " B/s - ");
+            
+            for(int i = 0; i < 4 - timeLeft.ToString().Length; i++)
+                Console.Write(" ");
+            Console.Write(timeLeft + " s left");
+            Console.WriteLine();
+        }
+
+
+        position += interval;
+        lastPosition = position;
+        lastCheck = DateTime.Now;
+        if(pause != 0) await Task.Delay(pause);
+    }
+
+    Console.WriteLine("Info:  Übertragung abgeschlossen. Gerät wird neu gestartet");
+    await device.InvokeFunctionProperty(0, 245, null);
+
+    await device.Disconnect();
+    await conn.Disconnect();
+    Console.WriteLine("Info:  Update erfolgreich durchgeführt");
+} catch (Exception ex)
+{
+    Console.WriteLine($"Error: {ex.Message}");
+}

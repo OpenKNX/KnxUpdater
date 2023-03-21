@@ -65,7 +65,6 @@ try
     int interval = 228; // Number of data-bytes per telegram
     int pause = args.Length < 5 ? 0 : int.Parse(args[4]);
     int position = 0;
-    int lastPosition = 0;
     DateTime lastCheck = DateTime.Now;
     bool firstSpeed = true;
     while(true)
@@ -96,7 +95,7 @@ try
         if(progress > 100) progress = 100;
 
         TimeSpan time = DateTime.Now - lastCheck;
-        int speed = (int)Math.Floor((position - lastPosition) / (double)time.TotalSeconds);
+        int speed = (int)Math.Floor(interval / (double)time.TotalSeconds);
         int timeLeft = (int)Math.Ceiling((fileSize - position) / (double)speed);
         if(timeLeft > 9999)
             timeLeft = 9999;
@@ -152,7 +151,6 @@ try
 
 
         position += interval;
-        lastPosition = position;
         lastCheck = DateTime.Now;
         if(pause != 0) await Task.Delay(pause);
     }

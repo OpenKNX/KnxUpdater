@@ -98,6 +98,8 @@ try
         TimeSpan time = DateTime.Now - lastCheck;
         int speed = (int)Math.Floor((position - lastPosition) / (double)time.TotalSeconds);
         int timeLeft = (int)Math.Ceiling((fileSize - position) / (double)speed);
+        if(timeLeft > 9999)
+            timeLeft = 9999;
 
         if(firstSpeed)
         {

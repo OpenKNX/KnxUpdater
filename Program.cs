@@ -57,7 +57,6 @@ try
     bool canFancy = true;
     try{
         int top = Console.CursorTop;
-        Console.Write("Progress: [                    ]    % -     B/s -      s left");
     } catch {
         canFancy = false;
     }
@@ -78,10 +77,28 @@ try
 
         int crcreq = KnxUpdater.CRC16.Get(tosend);
 
-        response = await device.InvokeFunctionProperty(0, 244, tosend, true);
+        try{
+            response = await device.InvokeFunctionProperty(0, 244, tosend, true);
+        } catch (Exception ex) {
+            if(firstSpeed && interval != 12)
+            {
+                interval = 12;
+                Console.WriteLine("Checking speed " + interval);
+                continue;
+            }
+            throw ex;
+        }
         if(response.Data[0] != 0x00)
         {
-            throw new Exception($"Fehler beim Übertragen: 0x{response.Data[0]}");
+            switch(response.Data[0])
+            {
+                case 0x01:
+                    throw new Exception($"Es wurden nicht so viele Bytes geschrieben wie geschickt wurden");
+
+                case 0x02:
+                    throw new Exception($"Der Download wurde vom Modul abgebrochen");
+            }
+            throw new Exception($"Fehler beim Übertragen: 0x{response.Data[0]:X2}");
         }
 
         int crcresp = (response.Data[1] << 8) | response.Data[2];
@@ -105,6 +122,9 @@ try
             speed = 0;
             firstSpeed = false;
             timeLeft = 0;
+
+            if(canFancy)
+                Console.Write("Progress: [                    ]    % -     B/s -      s left");
         }
 
         if(canFancy)
@@ -163,5 +183,6 @@ try
     Console.WriteLine("Info:  Update erfolgreich durchgeführt");
 } catch (Exception ex)
 {
+    Console.WriteLine();
     Console.WriteLine($"Error: {ex.Message}");
 }

@@ -4,29 +4,7 @@ This console app is for updating a Knx-Device over TwistedPair.
 
 
 ## Requirements
-You will have to use the [UpdateModule](https://github.com/thewhobox/KNX-IRModul/blob/master/src/UpdateModule.h).  
-You can Copy+Paste it in your project.  
-Then you need to add it to common:
-```C++
-#include <Arduino.h>
-#include "OpenKNX.h"
-#include "IrCodeModule.h"
-#include "UpdateModule.h"
-
-void setup()
-{
-	const uint8_t firmwareRevision = 0;
-	openknx.init(firmwareRevision);
-	openknx.addModule(1, new IrCodeModule());
-	openknx.addModule(2, new UpdateModule());
-	openknx.setup();
-}
-
-void loop()
-{
-	openknx.loop();
-}
-```
+You will have to use the [UpdateModule](https://github.com/OpenKnx/OFM-Updater).  
 
 ## Speed
 On an empty Bus we can get up to 570 Bytes/s.  
@@ -40,7 +18,7 @@ On an empty Bus we can get up to 570 Bytes/s.
 |300 kB| 9 min|
 
 
->You can speed up if you gzip yout bin file.
+>You can speed up if you gzip your bin file.
 
 ## Usage
 You can use this console app on windows, linux or mac.  

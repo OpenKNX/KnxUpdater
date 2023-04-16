@@ -2,6 +2,14 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Build-Release",
+            "group": "test",
+            "type": "shell",
+            "command": "scripts/Build-Release.ps1",
+            "args": [],
+            "problemMatcher": "$tsc"
+        },
+        {
             "label": "build",
             "command": "dotnet",
             "type": "process",

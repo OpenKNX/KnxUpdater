@@ -61,7 +61,7 @@ try
         canFancy = false;
     }
 
-    int interval = 228; // Number of data-bytes per telegram
+    int interval = 128; // Number of data-bytes per telegram
     int pause = args.Length < 5 ? 0 : int.Parse(args[4]);
     int position = 0;
     DateTime lastCheck = DateTime.Now;

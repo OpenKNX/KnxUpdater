@@ -25,13 +25,17 @@ namespace ConsoleApp1
 
         static async Task<int> Main(string[] args)
         {
-            Console.WriteLine("Willkommen zum KnxUpdater!!");
+            var version = typeof(Program).Assembly.GetName().Version;
+            var versionString = "";
+            if (version != null) 
+                versionString = string.Format("{0}.{1}.{2}", version.Major, version.Minor, version.Build);
+            Console.WriteLine("Willkommen zum KnxUpdater {0}!!", versionString);
             Console.WriteLine();
 
             if (args.Length == 0 || args[0] == "help" || args[0] == "--help")
             {
                 Console.WriteLine();
-                Console.WriteLine("knxupdater <IP-Address> <PhysicalAddress> <PathToFirmware> (--port=3671 --delay=0 --pkg=228 --errors=3)"); // --verbose)");
+                Console.WriteLine("KnxUpdater <IP-Address> <PhysicalAddress> <PathToFirmware> (--port=3671 --delay=0 --pkg=228 --errors=3)"); // --verbose)");
                 Console.WriteLine();
                 Console.WriteLine("IP-Address:      IP of the KNX-IP-interface");
                 Console.WriteLine("PhysicalAddress: Address of the KNX-Device (1.2.120)");

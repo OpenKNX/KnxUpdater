@@ -16,24 +16,21 @@ dotnet.exe publish KnxUpdater.csproj -c Debug -r win-x86   --self-contained true
 dotnet.exe publish KnxUpdater.csproj -c Debug -r osx-x64   --self-contained true /p:PublishSingleFile=true
 dotnet.exe publish KnxUpdater.csproj -c Debug -r linux-x64 --self-contained true /p:PublishSingleFile=true
 
-# we copy publish version also to our bin to ensure same KnxUpdater for our delivered products
-Copy-Item bin/Debug/net6.0/win-x64/publish/KnxUpdater.exe   ~/bin/KnxUpdater-x64.exe
-Copy-Item bin/Debug/net6.0/win-x86/publish/KnxUpdater.exe   ~/bin/KnxUpdater-x86.exe
-Copy-Item bin/Debug/net6.0/osx-x64/publish/KnxUpdater   ~/bin/KnxUpdater-osx64.exe
-Copy-Item bin/Debug/net6.0/linux-x64/publish/KnxUpdater ~/bin/KnxUpdater-linux64.exe
-
 # copy package content 
-Copy-Item ~/bin/KnxUpdater-x64.exe     release/tools
-Copy-Item ~/bin/KnxUpdater-x86.exe     release/tools
-Copy-Item ~/bin/KnxUpdater-osx64.exe   release/tools
-Copy-Item ~/bin/KnxUpdater-linux64.exe release/tools
+Copy-Item bin/Debug/net6.0/win-x64/publish/KnxUpdater.exe   release/tools/KnxUpdater-x64.exe
+Copy-Item bin/Debug/net6.0/win-x86/publish/KnxUpdater.exe   release/tools/KnxUpdater-x86.exe
+Copy-Item bin/Debug/net6.0/osx-x64/publish/KnxUpdater       release/tools/KnxUpdater-osx64.exe
+Copy-Item bin/Debug/net6.0/linux-x64/publish/KnxUpdater     release/tools/KnxUpdater-linux64.exe
 
 # add necessary scripts
 # Copy-Item scripts/Readme-Release.txt release/
 Copy-Item scripts/Install-KnxUpdater.ps1 release/
 
+# We execute the install script to get the current KnxUpdater-version to our bin directory for the right hardware
+release/Install-KnxUpdater.ps1 release
+
 # build release name
-$version = (Get-Item ~/bin/KnxUpdater.exe).VersionInfo
+$version = (Get-Item release/tools/KnxUpdater-x64.exe).VersionInfo
 $versionString = "$($version.FileMajorPart).$($version.FileMinorPart).$($version.FileBuildPart)"
 $ReleaseName = "KnxUpdater $versionString"
 $ReleaseName = $ReleaseName.Replace(" ", "-") + ".zip"

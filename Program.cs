@@ -206,11 +206,11 @@ namespace ConsoleApp1
         {
             Console.ForegroundColor = ConsoleColor.Red;
             // just for testing 
-            if(false) 
+            if(canFancy) 
             {
                 int top = Console.CursorTop;
                 Console.SetCursorPosition(0,  top - 1);
-                Console.WriteLine($"Error: ({errorCount+1}){msg}");
+                Console.WriteLine($"Error: ({errorCount+1}) {msg}");
                 Console.SetCursorPosition(0, top);
             } else {
                 Console.WriteLine($"Error: ({errorCount+1}) {msg}");

@@ -36,7 +36,7 @@ if ($?) {
         $os = "Mac OS"
         $setExecutable = 1
         Copy-Item $path/KnxUpdater-osx64.exe ~/bin/KnxUpdater
-    } elseif ($IsMacOS) {
+    } elseif ($IsLinux) {
         $os = "Linux OS"
         $setExecutable = 1
         Copy-Item $path/KnxUpdater-linux64.exe ~/bin/KnxUpdater

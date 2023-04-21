@@ -205,7 +205,8 @@ namespace ConsoleApp1
         static void Error(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            if(canFancy)
+            // just for testing 
+            if(false) 
             {
                 int top = Console.CursorTop;
                 Console.SetCursorPosition(0,  top - 1);

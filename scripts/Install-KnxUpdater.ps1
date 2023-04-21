@@ -6,7 +6,14 @@ if (!(Test-Path -Path ~/bin)) {
 }
 
 # is there a path to the release dir?
+$timeout = 0
 $path = $args[0] 
+if ($path) {
+    $path = "$path/tools/"
+} else {
+    $path = "tools/"
+    $timeout = 1
+}
 
 Write-Host "Kopiere KnxUpdater..."
 
@@ -18,27 +25,27 @@ if ($?) {
         if ([Environment]::Is64BitOperatingSystem)
         {
             $os="Windows 64-Bit"
-            Copy-Item $path/tools/KnxUpdater-x64.exe ~/bin/KnxUpdater.exe
+            Copy-Item $path/KnxUpdater-x64.exe ~/bin/KnxUpdater.exe
         }
         else
         {
             $os="Windows 32-Bit"
-            Copy-Item $path/tools/KnxUpdater-x86.exe ~/bin/KnxUpdater.exe
+            Copy-Item $path/KnxUpdater-x86.exe ~/bin/KnxUpdater.exe
         }
     } elseif ($IsMacOS) {
         $os = "Mac OS"
         $setExecutable = 1
-        Copy-Item $path/tools/KnxUpdater-osx64.exe ~/bin/KnxUpdater
+        Copy-Item $path/KnxUpdater-osx64.exe ~/bin/KnxUpdater
     } elseif ($IsMacOS) {
         $os = "Linux OS"
         $setExecutable = 1
-        Copy-Item $path/tools/KnxUpdater-linux64.exe ~/bin/KnxUpdater
+        Copy-Item $path/KnxUpdater-linux64.exe ~/bin/KnxUpdater
     }
 }
 if (!$?) {
     Write-Host "Kopieren fehlgeschlagen, KnxUpdater ist nicht verfuegbar. Bitte versuchen Sie es erneut."
-    if (!$path) {
-        timeout /T 20
+    if (timeout) {
+        if ($IsMacOS -or $IsLinux) { Start-Sleep -Seconds 20 } else { timeout /T 20 }
     }
     Exit 1
 }
@@ -53,6 +60,6 @@ if ($setExecutable) {
     Write-Host "ACHTUNG: Die Datei ~/bin/KnxUpdater muss not mit chmod +x ausfuehrbar gemacht werden. Dies muss ueber Kommandozeile geschehen, solange wir keine andere Loesung hierfuer gefunen haben."
 }
 
-if (!$path) {
-    timeout /T 20
+if ($timeout) {
+    if ($IsMacOS -or $IsLinux) { Start-Sleep -Seconds 20 } else { timeout /T 20 }
 }

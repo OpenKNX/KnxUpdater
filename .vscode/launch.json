@@ -27,7 +27,7 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net6.0/KnxUpdater.dll",
-            "args": ["192.168.148.10", "0.0.3", "..\\OAM-Logicmodule\\.pio\\build\\build_RP2040\\firmware.bin"],
+            "args": ["192.168.148.10", "0.0.15", "..\\OAM-Logicmodule\\.pio\\build\\build_RP2040\\firmware.bin.gz"],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",

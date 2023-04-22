@@ -13,13 +13,13 @@ namespace ConsoleApp1
         static int errorCount = 0;
         static bool canFancy = true;
         static bool firstSpeed = true;
+        static bool firstDraw = true;
         
         static Dictionary<string, int> arguments = new Dictionary<string, int> {
             {"port", 3671},
             {"delay", 0},
-            {"pkg", 228},
+            {"pkg", 236},
             {"errors", 3},
-        //    {"verbose", 0}
         };
 
 
@@ -42,7 +42,8 @@ namespace ConsoleApp1
                 Console.WriteLine("PathToFirmware:  Path to the firmware.bin or firmware.bin.gz");
                 Console.WriteLine("Port:            Optional - Port of the KNX-IP-interface (3671)");
                 Console.WriteLine("Delay:           Optional - Delay after each telegram (0 ms)");
-                Console.WriteLine("Package:         Optional - data size to transfer in one telegram (228 bytes)");
+                Console.WriteLine("Package (pkg):   Optional - data size to transfer in one telegram (228 bytes)");
+                Console.WriteLine("Errors:          Optional - Max count of errors before abort update");
                 return 0;
             }
 
@@ -103,6 +104,8 @@ namespace ConsoleApp1
 
                 byte[] data = System.IO.File.ReadAllBytes(args[2]);
                 Console.WriteLine($"Size:       {data.Length} Bytes ({data.Length / 1024} kB)");
+                Console.WriteLine();
+                Console.WriteLine();
 
                 uint fileSize = (uint)data.Length;
                 byte[] initdata = BitConverter.GetBytes(fileSize);
@@ -137,7 +140,7 @@ namespace ConsoleApp1
                             Console.WriteLine("Checking speed " + interval);
                             continue;
                         }
-                        Error("Error: " + ex.Message);
+                        Error(ex.Message);
                         continue;
                     }
 
@@ -188,11 +191,13 @@ namespace ConsoleApp1
             catch (Exception ex)
             {
                 Console.WriteLine();
-                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Error: {ex.Message} ({DateTime.Now.ToString()})");
                 Console.WriteLine("Info:  Update abgebrochen");
                 if(device != null)
                 {
-                    await device.InvokeFunctionProperty(0, 246, null);
+                    try{
+                        await device.InvokeFunctionProperty(0, 246, null);
+                    } catch { }
                     await device.Disconnect();
                 }
                 if(conn != null)
@@ -209,11 +214,11 @@ namespace ConsoleApp1
             if(canFancy) 
             {
                 int top = Console.CursorTop;
-                Console.SetCursorPosition(0,  top - 1);
-                Console.WriteLine($"Error: ({errorCount+1}) {msg}");
-                Console.SetCursorPosition(0, top);
+                Console.SetCursorPosition(0,  top);
+                Console.WriteLine($"Error: ({errorCount+1}) {msg} ({DateTime.Now.ToString()})");
+                firstDraw = true;
             } else {
-                Console.WriteLine($"Error: ({errorCount+1}) {msg}");
+                Console.WriteLine($"Error: ({errorCount+1}) {msg} ({DateTime.Now.ToString()})");
             }
             Console.ResetColor();
             
@@ -224,18 +229,18 @@ namespace ConsoleApp1
 
         static void Print(int progress, int speed, int timeLeft)
         {
-            if (firstSpeed)
+            if(firstSpeed)
             {
                 speed = 0;
-                firstSpeed = false;
                 timeLeft = 0;
+                firstSpeed = false;
+            }
+            if (firstDraw)
+            {
+                firstDraw = false;
 
                 if (canFancy)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine();
                     Console.Write("Progress: [                    ]    % -     B/s -      s left");
-                }
             }
 
             if (canFancy)

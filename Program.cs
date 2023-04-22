@@ -18,7 +18,7 @@ namespace ConsoleApp1
         static Dictionary<string, int> arguments = new Dictionary<string, int> {
             {"port", 3671},
             {"delay", 0},
-            {"pkg", 236},
+            {"pkg", 200},
             {"errors", 3},
         };
 
@@ -92,6 +92,7 @@ namespace ConsoleApp1
 
             Kaenx.Konnect.Connections.KnxIpTunneling? conn = null;
             Kaenx.Konnect.Classes.BusDevice? device = null;
+            var startTime = DateTime.Now;
 
             try
             {
@@ -186,7 +187,9 @@ namespace ConsoleApp1
 
                 await device.Disconnect();
                 await conn.Disconnect();
-                Console.WriteLine("Info:  Update erfolgreich durchgeführt");
+                // we inform the user about the time the update was running
+                var duration = DateTime.Now - startTime;
+                Console.WriteLine("Info:  Update erfolgreich durchgeführt in {0:D}:{1:D2} Minuten", (int)duration.TotalMinutes, duration.Seconds);
             }
             catch (Exception ex)
             {
@@ -210,7 +213,6 @@ namespace ConsoleApp1
         static void Error(string msg)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            // just for testing 
             if(canFancy) 
             {
                 int top = Console.CursorTop;

@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/bin/Debug/net6.0/KnxUpdater.dll",
-            "args": ["169.254.119.20", "1.1.1", "C:\\Users\\mikeg\\source\\repos\\BlinkTest\\.pio\\build\\pico\\firmware.bin"],
+            "args": ["169.254.119.20", "1.1.1", "C:\\Users\\u6\\Documents\\repos\\KNX-IRModul\\.pio\\build\\debug\\firmware.uf2"],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",

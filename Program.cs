@@ -31,9 +31,28 @@ if(!File.Exists(args[2]))
 }
 
 
-if(!args[2].EndsWith(".gz"))
+switch(args[2].Substring(args[2].LastIndexOf('.') + 1))
 {
-    Console.WriteLine("Info:  Es wird empfohlen die Firmware mit gzip zu komprimieren");
+    case "bin":
+        Console.WriteLine("Info:  Es wird empfohlen die Firmware mit gzip zu komprimieren");
+        Console.WriteLine("Info:  (beta) firmware wird komprimiert übertragen");
+        KnxUpdater.Converter.ToGZip(args[2]);
+        args[2] = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firmware.bin.gz");
+        break;
+
+    case "gz":
+        break;
+
+    case "uf2":
+    {
+        Console.WriteLine("Info:  Es wird versucht die uf2 in eine bin umzuwandeln");
+        KnxUpdater.Converter.ToBin(args[2]);
+        args[2] = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firmware.bin");
+        Console.WriteLine("Info:  (beta) firmware wird komprimiert übertragen");
+        KnxUpdater.Converter.ToGZip(args[2]);
+        args[2] = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firmware.bin.gz");
+        break;
+    }
 }
 
 try

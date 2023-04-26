@@ -93,6 +93,22 @@ public class Converter
             */
 
             output.Data = file.Skip(32).Take((int)output.DataLength).ToArray();
+
+            if(output.FlagExtensionTags)
+            {
+                uint addr = 32 + output.DataLength;
+                while(file[addr] != 0 && file[addr+1] != 0)
+                {
+                    Tag tag = new Tag();
+                    tag.Size = file[addr];
+                    tag.Type = BitConverter.ToUInt16(file.Skip((int)addr+1).Take(2).ToArray());
+                    tag.Data = file.Skip((int)addr+3).Take((int)tag.Size - 3).ToArray();
+                    output.Tags.Add(tag);
+
+                    uint padding = (4 - (tag.Size % 4)) % 4;
+                    addr += tag.Size + padding;
+                }   
+            }
         }
 
 
@@ -134,6 +150,8 @@ public class Block
 
     public byte[] Data { get; set; } = new byte[0];
 
+    public List<Tag> Tags { get; set; } = new List<Tag>();
+
     
     public string FamilyName
     {
@@ -148,4 +166,20 @@ public class Block
         {0x68ed2b88, "SAMD21"},
         {0xe48bff56, "RP2040"}
     };
+}
+
+public class Tag
+{
+    public uint Size { get; set; }
+    public uint Type { get; set; }
+    public byte[] Data { get; set; } = new byte[0];
+}
+
+public enum TagTypes
+{
+    FirmwareVersion = 0x9fc7bc,
+    Description = 0x650d9d,
+    PageSize = 0x0be9f7,
+    SHA2 = 0xb46db0,
+    DeviceTypeIdentifier = 0xc8a729
 }

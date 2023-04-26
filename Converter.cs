@@ -12,7 +12,7 @@ public class Converter
     {
         FileStream fout = System.IO.File.Create(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firmware.bin"));
 
-        int counter = 1;
+        int counter = 0;
         Block block;
         do
         {
@@ -110,10 +110,6 @@ public class Converter
                 }   
             }
         }
-
-
-
-
 
 
         return output;

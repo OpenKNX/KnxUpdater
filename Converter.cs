@@ -33,7 +33,6 @@ public class Converter
     {
         List<uint> data = new List<uint>();
         byte[] file = System.IO.File.ReadAllBytes(path);
-        int fileSize = file.Length;
         file = file.Skip(block * 512).Take(512).ToArray();
         byte[] buffer = new byte[4];
 
@@ -94,6 +93,16 @@ public class Converter
 
             output.Data = file.Skip(32).Take((int)output.DataLength).ToArray();
 
+            if(output.BlockCount - 1 == output.Sequence)
+            {
+                int xcounter = (int)output.DataLength - 1;
+                while(output.Data[xcounter] == 0x00)
+                {
+                    xcounter--;
+                }
+                output.Data = output.Data.Take(xcounter+1).ToArray();
+            }
+
             if(output.FlagExtensionTags)
             {
                 uint addr = 32 + output.DataLength;
@@ -101,8 +110,8 @@ public class Converter
                 {
                     Tag tag = new Tag();
                     tag.Size = file[addr];
-                    tag.Type = BitConverter.ToUInt16(file.Skip((int)addr+1).Take(2).ToArray());
-                    tag.Data = file.Skip((int)addr+3).Take((int)tag.Size - 3).ToArray();
+                    tag.Type = BitConverter.ToUInt16(file.Skip((int)addr+1).Take(3).ToArray());
+                    tag.Data = file.Skip((int)addr+4).Take((int)tag.Size - 4).ToArray();
                     output.Tags.Add(tag);
 
                     uint padding = (4 - (tag.Size % 4)) % 4;

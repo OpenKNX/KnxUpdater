@@ -7,6 +7,11 @@ namespace KnxUpdater;
 
 public class Converter
 {
+    private static uint KNX_EXTENSION_TYPE = 0x584E4B;
+    private static uint UF2_MAGIC_START0 = 0x0A324655;
+    private static uint UF2_MAGIC_START1 = 0x9E5D5157;
+    private static uint UF2_MAGIC_END = 0x0AB16F30;
+
 
     public static byte[] ToBin(string path, bool force, uint openknxid, uint appNumber, uint appVersion, uint appRevision)
     {
@@ -24,7 +29,7 @@ public class Converter
                 {
                     if(!checkedApp && block.Tags.Count > 0)
                     {
-                        Tag? tag = block.Tags.SingleOrDefault(t => t.Type == 0x584E4B);
+                        Tag? tag = block.Tags.SingleOrDefault(t => t.Type == KNX_EXTENSION_TYPE);
                         if(tag != null)
                         {
                             checkedApp = true;
@@ -139,7 +144,7 @@ public class Converter
 
         Block output = new Block();
 
-        if(data[0] == 0x0A324655 && data[1] == 0x9E5D5157 && data[8] == 0x0AB16F30)
+        if(data[0] == UF2_MAGIC_START0 && data[1] == UF2_MAGIC_START1 && data[8] == UF2_MAGIC_END)
         {
             output.IsValid = true;
             output.Address = data[3];

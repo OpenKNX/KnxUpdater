@@ -24,8 +24,8 @@ public class Converter
                 {
                     if(!checkedApp && block.Tags.Count > 0)
                     {
-                        Tag? tag = block.Tags.SingleOrDefault(t => t.Type == 0x010101);
-                        if(tag != null && tag.Type == 0x010101)
+                        Tag? tag = block.Tags.SingleOrDefault(t => t.Type == 0x584E4B);
+                        if(tag != null)
                         {
                             checkedApp = true;
                             if(!CheckApplication(tag, force, openknxid, appNumber, appVersion, appRevision))

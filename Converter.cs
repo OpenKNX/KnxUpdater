@@ -8,25 +8,112 @@ namespace KnxUpdater;
 public class Converter
 {
 
-    public static void ToBin(string path)
+    public static byte[] ToBin(string path, bool force, uint openknxid, uint appNumber, uint appVersion, uint appRevision)
     {
-        FileStream fout = System.IO.File.Create(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firmware.bin"));
-
-        int counter = 0;
-        Block block;
-        do
+        using(MemoryStream ms = new MemoryStream())
         {
-            block = ParseBlock(path, counter++);
+            bool checkedApp = false;
+            int counter = 0;
+            long addr = -1;
+            Block block;
+            do
+            {
+                block = ParseBlock(path, counter);
 
-            if(block.IsValid && !block.FlagNotMainFlash)
-                fout.Write(block.Data, 0, block.Data.Length);
+                if(block.IsValid && !block.FlagNotMainFlash)
+                {
+                    if(!checkedApp && block.Tags.Count > 0)
+                    {
+                        Tag? tag = block.Tags.SingleOrDefault(t => t.Type == 0x010101);
+                        if(tag != null && tag.Type == 0x010101)
+                        {
+                            checkedApp = true;
+                            if(!CheckApplication(tag, force, openknxid, appNumber, appVersion, appRevision))
+                                throw new Exception("Update wurde aufgrund Inkompatibilität abgebrochen.");
+                            
+                            Console.WriteLine($"Conv:  Datei enthält OpenKnxId={openknxid:X2} AppNumber={appNumber:X2} AppVersion={appVersion:X2} AppRevision={appRevision:X2}");
+                        }
+                    }
 
-        } while(block.Sequence < block.BlockCount -1);
+                    if(addr == -1)
+                        addr = block.Address;
 
-        
-        fout.Flush();
-        fout.Close();
-        fout.Dispose();
+                    var padding = block.Address - addr;
+                    if (padding < 0) {
+                        throw new DataMisalignedException(string.Format("Blockreihenfolge falsch an Position {0}", addr));
+                    }
+                    if (padding > 10 * 1024 * 1024) {
+                        throw new DataMisalignedException(string.Format("Mehr als 10M zum Auffüllen (padding) benötigt an Position {0}", addr));
+                    }
+                    if (padding % 4 != 0) {
+                        throw new DataMisalignedException(string.Format("Adresse zum Auffüllen (padding) nicht an einer Wortgrenze ausgerichtet an Position {0}", addr));
+                    }
+                    while (padding > 0) {
+                        padding -= 4;
+                        ms.Write(BitConverter.GetBytes(0), 0, 4);
+                    }
+                    addr += block.Size;
+
+                    ms.Write(block.Data, 0, block.Data.Length);
+                }
+                else
+                    Console.WriteLine($"Conv:  Block an Position {counter} ignoriert; Falsche 'magic number'!");
+
+                counter++;
+            } while(block.Sequence < block.BlockCount -1);
+
+            
+            ms.Flush();
+            return ms.ToArray();
+        }
+    }
+
+    private static bool CheckApplication(Tag tag, bool force, uint deviceOpenKnxId,  uint deviceAppNumber, uint deviceAppVersion, uint deviceAppRevision)
+    {
+        uint openKnxId = tag.Data[0];
+        uint appNumber = tag.Data[1];
+        uint appVersion = tag.Data[2];
+        uint appRevision = tag.Data[3];
+
+        if(openKnxId != deviceOpenKnxId)
+        {
+            Console.WriteLine("Conv:  Die OpenKnxId auf dem Gerät ist {0:X2}, die der Firmware ist {1:X2}.", deviceOpenKnxId, openKnxId);
+            Console.WriteLine("       Das führt zu einem neuen Gerät, die PA ist dann 15.15.255.");
+            Console.WriteLine("       Es muss komplett über die ETS neu aufgesetzt werden!");
+            Console.WriteLine("       Du musst sicher sein, dass die Hardware die Firmware unterstützt, die hochgeladen wird!");
+            return force ? true : Continue();
+        } else if(appNumber != deviceAppNumber)
+        {
+            Console.WriteLine("Conv:  Die Applikationsnummer auf dem Gerät ist {0:X2}, die der Firmware ist {1:X2}.", deviceAppNumber, appNumber);
+            Console.WriteLine("       Das führt zu einem neuen Gerät, die PA ist dann 15.15.255.");
+            Console.WriteLine("       Es muss komplett über die ETS neu aufgesetzt werden!");
+            Console.WriteLine("       Du musst sicher sein, dass die Hardware die Firmware unterstützt, die hochgeladen wird!");
+            return force ? true : Continue();
+        } else if (appVersion == deviceAppVersion) {
+            Console.WriteLine("Conv:  Die Applikationsversion auf dem Gerät ist {0:X2}, die der Firmware auch.", deviceAppVersion);
+            Console.WriteLine("       Da derzeit die Firmware-Revision nicht geprüft werden kann,");
+            Console.WriteLine("       musst Du sicherstellen, dass Du nicht versehentlich ein Downgrade machst!");
+            return force ? true : Continue();
+        } else if (appVersion < deviceAppVersion) {
+            Console.WriteLine("Conv:  Die Applikationsversion auf dem Gerät ist {0:X2}, die der Firmware ist {1:X2}.", deviceAppVersion, appVersion);
+            Console.WriteLine("       Das führt zu einem Downgrade!");
+            Console.WriteLine("       Das Gerät muss mit der ETS neu programmiert werden (die PA bleibt erhalten).");
+            return force ? true : Continue();
+        }
+
+        return true;
+    }
+
+    private static bool Continue()
+    {
+        Console.Write("Comv:  Update trotzdem durchführen? ");
+        var key = Console.ReadKey(false);
+        Console.WriteLine();
+        if (key.KeyChar == 'J' || key.KeyChar == 'j') {
+            Console.WriteLine("Conv:  Update wird fortgesetzt!");
+            return true;
+        }
+        return false;
     }
 
     private static Block ParseBlock(string path, int block)
@@ -110,7 +197,7 @@ public class Converter
                 {
                     Tag tag = new Tag();
                     tag.Size = file[addr];
-                    tag.Type = BitConverter.ToUInt16(file.Skip((int)addr+1).Take(3).ToArray());
+                    tag.Type = (uint)(file[addr+1] | file[addr+2] << 8 | file[addr+3] << 16);
                     tag.Data = file.Skip((int)addr+4).Take((int)tag.Size - 4).ToArray();
                     output.Tags.Add(tag);
 

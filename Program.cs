@@ -220,14 +220,14 @@ namespace ConsoleApp1
                     if (arguments["delay"] != 0) await Task.Delay(arguments["delay"]);
                 }
 
-                Console.WriteLine("Info:  Übertragung abgeschlossen. Gerät wird neu gestartet");
+                Console.WriteLine("Info:  Übertragung abgeschlossen. Gerät wird neu gestartet     ");
                 await device.InvokeFunctionProperty(0, 245, null);
 
                 await device.Disconnect();
                 await conn.Disconnect();
                 // we inform the user about the time the update was running
                 var duration = DateTime.Now - startTime;
-                Console.WriteLine("Info:  Update erfolgreich durchgeführt in {0:D}:{1:D2} Minuten", (int)duration.TotalMinutes, duration.Seconds);
+                Console.WriteLine("Info:  Update erfolgreich durchgeführt in {0:D}:{1:D2} Minuten mit {2} Byte/Sekunde", (int)duration.TotalMinutes, duration.Seconds, (int)duration.TotalSeconds);
             }
             catch (Exception ex)
             {

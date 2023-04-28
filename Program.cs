@@ -20,6 +20,7 @@ namespace ConsoleApp1
             {"delay", 0},
             {"pkg", 200},
             {"errors", 3},
+            {"force", 0},
         };
 
 
@@ -28,14 +29,14 @@ namespace ConsoleApp1
             var version = typeof(Program).Assembly.GetName().Version;
             var versionString = "";
             if (version != null) 
-                versionString = string.Format("{0}.{1}.{2}", version.Major, version.Minor, version.Build);
-            Console.WriteLine("Willkommen zum KnxUpdater {0}!!", versionString);
+                versionString = string.Format(" {0}.{1}.{2}", version.Major, version.Minor, version.Build);
+            Console.WriteLine("Willkommen zum KnxUpdater{0}!!", versionString);
             Console.WriteLine();
 
             if (args.Length == 0 || args[0] == "help" || args[0] == "--help")
             {
                 Console.WriteLine();
-                Console.WriteLine("KnxUpdater <IP-Address> <PhysicalAddress> <PathToFirmware> (--port=3671 --delay=0 --pkg=228 --errors=3)"); // --verbose)");
+                Console.WriteLine("KnxUpdater <IP-Address> <PhysicalAddress> <PathToFirmware> (--port=3671 --delay=0 --pkg=228 --errors=3 --force)"); // --verbose)");
                 Console.WriteLine();
                 Console.WriteLine("IP-Address:      IP of the KNX-IP-interface");
                 Console.WriteLine("PhysicalAddress: Address of the KNX-Device (1.2.120)");
@@ -44,6 +45,7 @@ namespace ConsoleApp1
                 Console.WriteLine("Delay:           Optional - Delay after each telegram (0 ms)");
                 Console.WriteLine("Package (pkg):   Optional - data size to transfer in one telegram (228 bytes)");
                 Console.WriteLine("Errors:          Optional - Max count of errors before abort update");
+                Console.WriteLine("Force:           Ignore warnings from application check");
                 return 0;
             }
 
@@ -81,10 +83,21 @@ namespace ConsoleApp1
                 return 0;
             }
 
-
-            if (!args[2].EndsWith(".gz"))
+            string extension = args[2].Substring(args[2].LastIndexOf("."));
+            switch(extension)
             {
-                Console.WriteLine("Info:  Es wird empfohlen die Firmware mit gzip zu komprimieren");
+                case ".bin":
+                    Console.WriteLine("Info:  Bei diesem Dateiformat kann die Kompatibilität\r\n       zur Applikation nicht überprüft werden.");
+                    Console.WriteLine("Info:  (beta) Die Firmware wird komprimiert übertragen!");
+                    break;
+
+                case ".gz":
+                    Console.WriteLine("Info:  Bei diesem Dateiformat kann die Kompatibilität\r\n       zur Applikation nicht überprüft werden.");
+                    break;
+
+                case ".uf2":
+                    Console.WriteLine("Info:  (beta) Die Firmware wird komprimiert übertragen!");
+                    break;
             }
             
             try { int top = Console.CursorTop; }
@@ -96,6 +109,11 @@ namespace ConsoleApp1
 
             try
             {
+                uint deviceOpenKnxId = 0;
+                uint deviceAppNumber = 0;
+                uint deviceAppVersion  = 0;
+                uint deviceAppRevision = 0;
+
                 conn = new Kaenx.Konnect.Connections.KnxIpTunneling(args[0], arguments["port"]);
                 await conn.Connect();
                 Console.WriteLine("Info:  Verbindung zum Bus hergestellt");
@@ -103,7 +121,27 @@ namespace ConsoleApp1
                 await device.Connect();
                 Console.WriteLine($"Info:  Verbindung zum KNX-Gerät {args[1]} hergestellt");
 
-                byte[] data = System.IO.File.ReadAllBytes(args[2]);
+                try
+                {
+                    byte[] res = await device.PropertyRead(0, 78);
+                    if (res.Length > 0) {
+                        deviceOpenKnxId = res[2];
+                        deviceAppNumber = res[3];
+                        deviceAppVersion = res[4];
+                        deviceAppRevision = res[5];
+                    } else {
+                        throw new Exception("PropertyResponse für HardwareType war ungültig");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Error(ex.Message);
+                    return 1;
+                }
+
+                await device.Disconnect();
+                byte[] data = KnxUpdater.FileHandler.GetBytes(args[2], arguments["force"] == 1, deviceOpenKnxId, deviceAppNumber, deviceAppVersion, deviceAppRevision);
+                await device.Connect();
                 Console.WriteLine($"Size:       {data.Length} Bytes ({data.Length / 1024} kB)");
                 Console.WriteLine();
                 Console.WriteLine();
@@ -182,14 +220,14 @@ namespace ConsoleApp1
                     if (arguments["delay"] != 0) await Task.Delay(arguments["delay"]);
                 }
 
-                Console.WriteLine("Info:  Übertragung abgeschlossen. Gerät wird neu gestartet");
+                Console.WriteLine("Info:  Übertragung abgeschlossen. Gerät wird neu gestartet     ");
                 await device.InvokeFunctionProperty(0, 245, null);
 
                 await device.Disconnect();
                 await conn.Disconnect();
                 // we inform the user about the time the update was running
                 var duration = DateTime.Now - startTime;
-                Console.WriteLine("Info:  Update erfolgreich durchgeführt in {0:D}:{1:D2} Minuten", (int)duration.TotalMinutes, duration.Seconds);
+                Console.WriteLine("Info:  Update erfolgreich durchgeführt in {0:D}:{1:D2} Minuten mit {2} Byte/Sekunde", (int)duration.TotalMinutes, duration.Seconds, (int)duration.TotalSeconds);
             }
             catch (Exception ex)
             {

@@ -32,7 +32,18 @@ internal class FileHandler
                 return System.IO.File.ReadAllBytes(path);
 
             case ".uf2":
-                return Converter.ToBin(path, force, openknxid, appNumber, appVersion, appRevision);
+            {
+                using (MemoryStream result = new MemoryStream())
+                {
+                    using (GZipStream compressionStream = new GZipStream(result, CompressionMode.Compress))
+                    {
+                        byte[] data = Converter.ToBin(path, force, openknxid, appNumber, appVersion, appRevision);
+                        foreach(byte d in data)
+                            compressionStream.WriteByte(d);
+                    }
+                    return result.ToArray();
+                }
+            }
         }
 
         throw new Exception("Nicht unterstütztes Dateiformat: " + extension);

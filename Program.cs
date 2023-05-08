@@ -140,84 +140,20 @@ namespace ConsoleApp1
                 }
 
                 await device.Disconnect();
-                byte[] data = KnxUpdater.FileHandler.GetBytes(args[2], arguments["force"] == 1, deviceOpenKnxId, deviceAppNumber, deviceAppVersion, deviceAppRevision);
-                await device.Connect();
-                Console.WriteLine($"Size:       {data.Length} Bytes ({data.Length / 1024} kB)");
-                Console.WriteLine();
-                Console.WriteLine();
-
-                uint fileSize = (uint)data.Length;
-                byte[] initdata = BitConverter.GetBytes(fileSize);
-
-                Kaenx.Konnect.Messages.Response.MsgFunctionPropertyStateRes response = await device.InvokeFunctionProperty(0, 243, initdata, true);
-
-                int interval = arguments["pkg"]; // Number of data-bytes per telegram
-                int position = 0;
-                DateTime lastCheck = DateTime.Now;
-                while (true)
+                using(MemoryStream stream = new MemoryStream())
                 {
-                    if (data.Length - position == 0) break;
+                    KnxUpdater.FileHandler.GetBytes(stream, args[2], arguments["force"] == 1, deviceOpenKnxId, deviceAppNumber, deviceAppVersion, deviceAppRevision);
+                    await device.Connect();
+                    Console.WriteLine($"Size:       {stream.Length} Bytes ({stream.Length / 1024} kB)");
+                    Console.WriteLine();
+                    Console.WriteLine();
 
-                    if (data.Length - position < interval)
-                        interval = data.Length - position;
+                    uint fileSize = (uint)stream.Length;
+                    byte[] initdata = BitConverter.GetBytes(fileSize);
 
-                    List<byte> tosend = new List<byte>();
-                    tosend.AddRange(data.Skip(position).Take(interval));
-
-                    int crcreq = KnxUpdater.CRC16.Get(tosend.ToArray());
-                    tosend.InsertRange(0, BitConverter.GetBytes((uint)position));
-
-                    try
-                    {
-                        response = await device.InvokeFunctionProperty(0, 244, tosend.ToArray(), true);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (firstSpeed && interval != 12)
-                        {
-                            interval = 12;
-                            Console.WriteLine("Checking speed " + interval);
-                            continue;
-                        }
-                        Error(ex.Message);
-                        continue;
-                    }
-
-                    if (response.Data[0] != 0x00)
-                    {
-                        switch (response.Data[0])
-                        {
-                            case 0x01:
-                                throw new Exception($"Es wurden nicht so viele Bytes geschrieben wie geschickt wurden");
-
-                            case 0x02:
-                                throw new Exception($"Der Download wurde vom Modul abgebrochen");
-                        }
-                        throw new Exception($"Fehler beim Übertragen: 0x{response.Data[0]:X2}");
-                    }
-
-                    int crcresp = (response.Data[1] << 8) | response.Data[2];
-
-                    if (crcreq != crcresp)
-                    {
-                        Error($"Fehler beim Übertragen -> Falscher CRC (Req: {crcreq:X4} / Res: {crcresp:X4})");
-                        continue;
-                    }
-
-                    int progress = (int)Math.Floor(position * 100.0 / fileSize);
-                    if (progress > 100) progress = 100;
-
-                    TimeSpan time = DateTime.Now - lastCheck;
-                    int speed = (int)Math.Floor(interval / (double)time.TotalSeconds);
-                    int timeLeft = (int)Math.Ceiling((fileSize - position) / (double)speed);
-                    if (timeLeft > 9999)
-                        timeLeft = 9999;
-
-                    Print(progress, speed, timeLeft);
-
-                    position += interval;
-                    lastCheck = DateTime.Now;
-                    if (arguments["delay"] != 0) await Task.Delay(arguments["delay"]);
+                    KnxFtpClient.Lib.FtpClient client = new KnxFtpClient.Lib.FtpClient(device);
+                    client.ProcessChanged += ProcessChanged;
+                    await client.FileUpload("/firmware.bin", stream, arguments["pkg"]);
                 }
 
                 Console.WriteLine("Info:  Übertragung abgeschlossen. Gerät wird neu gestartet     ");
@@ -246,6 +182,11 @@ namespace ConsoleApp1
             }
 
             return 0;
+        }
+
+        static void ProcessChanged(int percent, int speed, int time)
+        {
+            Print(percent, speed, time);
         }
 
         static void Error(string msg)

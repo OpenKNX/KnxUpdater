@@ -7,6 +7,43 @@ internal class FileHandler
 {
 
 
+    public static void GetBytes(MemoryStream result, string path, bool force, uint openknxid, uint appNumber, uint appVersion, uint appRevision)
+    {
+        string extension = path.Substring(path.LastIndexOf("."));
+        switch(extension)
+        {
+            case ".bin":
+            {
+                using (GZipStream compressionStream = new GZipStream(result, CompressionMode.Compress))
+                {
+                    using(FileStream fs = System.IO.File.Open(path, FileMode.Open))
+                    {
+                        fs.CopyTo(compressionStream);
+                        fs.Flush();
+                    }
+                }
+                return;
+            }
+
+            case ".gz":
+                result.Write(System.IO.File.ReadAllBytes(path));
+                return;
+
+            case ".uf2":
+            {
+                using (GZipStream compressionStream = new GZipStream(result, CompressionMode.Compress))
+                {
+                    byte[] data = Converter.ToBin(path, force, openknxid, appNumber, appVersion, appRevision);
+                    foreach(byte d in data)
+                        compressionStream.WriteByte(d);
+                }
+                break;
+            }
+        }
+
+        throw new Exception("Nicht unterstütztes Dateiformat: " + extension);
+    }
+
     public static byte[] GetBytes(string path, bool force, uint openknxid, uint appNumber, uint appVersion, uint appRevision)
     {
         string extension = path.Substring(path.LastIndexOf("."));

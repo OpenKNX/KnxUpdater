@@ -4,6 +4,9 @@
 			"path": "."
 		},
 		{
+			"path": "../KnxFtpClient.Lib"
+		},
+		{
 			"path": "../Kaenx-Konnect"
 		}
 	],
